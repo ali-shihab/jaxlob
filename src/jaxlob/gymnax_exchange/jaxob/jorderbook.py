@@ -1,7 +1,7 @@
 from functools import partial
 import importlib
 from typing import Dict, NamedTuple, Optional, Tuple
-import sims.AlphaTrade.gymnax_exchange.jaxob.JaxOrderBookArrays as job
+import jaxlob.gymnax_exchange.jaxob.JaxOrderBookArrays as job
 job = importlib.reload(job)
 import jax
 from jax import numpy as jnp
