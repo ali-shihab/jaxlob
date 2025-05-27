@@ -58,11 +58,15 @@ def cancel_order(orderside, msg):
 
     # jax.debug.breakpoint()
     # TODO: also check for price here?
-    oid_match = (orderside[:, 2] == msg['orderid'])
-    idx = jnp.where(oid_match, size=1, fill_value=-1)[0][0]
-    idx = jax.lax.cond(idx == -1, get_init_id_match, lambda a, b: idx, orderside, msg)
-    orderside = orderside.at[idx, 1].set(orderside[idx, 1] - msg['quantity'])
-    return __removeZeroNegQuant(orderside)
+    oid_match = (orderside[:, 2] == msg['orderid']) # is there a match on orderid?
+    idx = jnp.where(oid_match, size=1, fill_value=-1)[0][0] # if there is a match, get the index of the match, else -1
+    idx = jax.lax.cond(idx == -1, get_init_id_match, lambda a, b: idx, orderside, msg) # if no match (-1), try to match on price & INITID, else return idx
+    orderside = jax.lax.cond(idx == -1, # if no match (still -1), return original orderside, else subtract quantity
+                             lambda a, b: orderside,
+                             lambda a, b: orderside.at[idx, 1].set(orderside[idx, 1] - msg['quantity']),
+                             orderside,
+                             msg)
+    return __removeZeroNegQuant(orderside) # remove any orders with zero or negative quantity
 
 ############### MATCHING FUNCTIONS ###############
 
